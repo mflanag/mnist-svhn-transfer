@@ -12,6 +12,8 @@ class Config:
                 lr=.0002,
                 log_step=10,
                 sample_step=500,
+                svhn_path='C:/Users/matth/Downloads/svhn',
+                mnist_path='C:/Users/matth/Downloads/mnist',
                 sample_path='./samples',
                 model_path='./models',
                 image_size=32):
@@ -30,5 +32,7 @@ class Config:
         self.sample_path = sample_path
         self.model_path = model_path
         self.image_size = image_size
+        self.svhn_path = svhn_path
+        self.mnist_path = mnist_path
     #
 #

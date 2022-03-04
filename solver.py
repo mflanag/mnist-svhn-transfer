@@ -63,6 +63,8 @@ class Solver(object):
         row = int(np.sqrt(self.batch_size))
         merged = np.zeros([3, row*h, row*w*2], dtype=np.uint8)
         for idx, (s, t) in enumerate(zip(sources, targets)):
+            s = s * 128 + 128
+            t = t * 128 + 128
             i = idx // row
             j = idx % row
             merged[:, i*h:(i+1)*h, (j*2)*h:(j*2+1)*h] = s
@@ -98,6 +100,7 @@ class Solver(object):
         # loss if use_labels = True
         criterion = nn.CrossEntropyLoss()
         
+        self.reset_grad()
         for step in range(self.train_iters+1):
             # reset data_iter for each epoch
             if (step+1) % iter_per_epoch == 0:
@@ -111,15 +114,13 @@ class Solver(object):
             mnist, m_labels = self.to_var(mnist), self.to_var(m_labels)
 
             if self.use_labels:
-                mnist_fake_labels = self.to_var(
-                    torch.Tensor([self.num_classes]*svhn.size(0)).long())
-                svhn_fake_labels = self.to_var(
-                    torch.Tensor([self.num_classes]*mnist.size(0)).long())
+                mnist_fake_labels = self.to_var(torch.Tensor([self.num_classes]*svhn.size(0)).long())
+                svhn_fake_labels = self.to_var(torch.Tensor([self.num_classes]*mnist.size(0)).long())
             
             #============ train D ============#
             
             # train with real images
-            self.reset_grad()
+            # self.reset_grad()
             out = self.d1(mnist)
             if self.use_labels:
                 d1_loss = criterion(out, m_labels)
@@ -135,11 +136,12 @@ class Solver(object):
             d_mnist_loss = d1_loss
             d_svhn_loss = d2_loss
             d_real_loss = d1_loss + d2_loss
+            self.d_optimizer.zero_grad()
             d_real_loss.backward()
             self.d_optimizer.step()
             
             # train with fake images
-            self.reset_grad()
+            # self.reset_grad()
             fake_svhn = self.g12(mnist)
             out = self.d2(fake_svhn)
             if self.use_labels:
@@ -155,13 +157,14 @@ class Solver(object):
                 d1_loss = torch.mean(out**2)
             
             d_fake_loss = d1_loss + d2_loss
+            self.d_optimizer.zero_grad()
             d_fake_loss.backward()
             self.d_optimizer.step()
             
             #============ train G ============#
             
             # train mnist-svhn-mnist cycle
-            self.reset_grad()
+            # self.reset_grad()
             fake_svhn = self.g12(mnist)
             out = self.d2(fake_svhn)
             reconst_mnist = self.g21(fake_svhn)
@@ -173,11 +176,12 @@ class Solver(object):
             if self.use_reconst_loss:
                 g_loss += torch.mean((mnist - reconst_mnist)**2)
 
+            self.g_optimizer.zero_grad()
             g_loss.backward()
             self.g_optimizer.step()
 
             # train svhn-mnist-svhn cycle
-            self.reset_grad()
+            # self.reset_grad()
             fake_mnist = self.g21(svhn)
             out = self.d1(fake_mnist)
             reconst_svhn = self.g12(fake_mnist)
@@ -189,15 +193,16 @@ class Solver(object):
             if self.use_reconst_loss:
                 g_loss += torch.mean((svhn - reconst_svhn)**2)
 
+            self.g_optimizer.zero_grad()
             g_loss.backward()
             self.g_optimizer.step()
             
             # print the log info
-            # if (step+1) % self.log_step == 0:
-            #     print('Step [%d/%d], d_real_loss: %.4f, d_mnist_loss: %.4f, d_svhn_loss: %.4f, '
-            #           'd_fake_loss: %.4f, g_loss: %.4f' 
-            #           %(step+1, self.train_iters, d_real_loss.data[0], d_mnist_loss.data[0], 
-            #             d_svhn_loss.data[0], d_fake_loss.data[0], g_loss.data[0]))
+            if (step+1) % self.log_step == 0:
+                print('Step [%d/%d], d_real_loss: %.4f, d_mnist_loss: %.4f, d_svhn_loss: %.4f, '
+                      'd_fake_loss: %.4f, g_loss: %.4f' 
+                      %(step+1, self.train_iters, d_real_loss.data, d_mnist_loss.data, 
+                        d_svhn_loss.data, d_fake_loss.data, g_loss.data))
 
             # save the sampled images
             if (step+1) % self.sample_step == 0:
