@@ -4,6 +4,7 @@ import torchvision
 import os
 import pickle
 import scipy.io
+import imageio
 import numpy as np
 
 from torch.autograd import Variable
@@ -60,7 +61,7 @@ class Solver(object):
     def merge_images(self, sources, targets, k=10):
         _, _, h, w = sources.shape
         row = int(np.sqrt(self.batch_size))
-        merged = np.zeros([3, row*h, row*w*2])
+        merged = np.zeros([3, row*h, row*w*2], dtype=np.uint8)
         for idx, (s, t) in enumerate(zip(sources, targets)):
             i = idx // row
             j = idx % row
@@ -192,11 +193,11 @@ class Solver(object):
             self.g_optimizer.step()
             
             # print the log info
-            if (step+1) % self.log_step == 0:
-                print('Step [%d/%d], d_real_loss: %.4f, d_mnist_loss: %.4f, d_svhn_loss: %.4f, '
-                      'd_fake_loss: %.4f, g_loss: %.4f' 
-                      %(step+1, self.train_iters, d_real_loss.data[0], d_mnist_loss.data[0], 
-                        d_svhn_loss.data[0], d_fake_loss.data[0], g_loss.data[0]))
+            # if (step+1) % self.log_step == 0:
+            #     print('Step [%d/%d], d_real_loss: %.4f, d_mnist_loss: %.4f, d_svhn_loss: %.4f, '
+            #           'd_fake_loss: %.4f, g_loss: %.4f' 
+            #           %(step+1, self.train_iters, d_real_loss.data[0], d_mnist_loss.data[0], 
+            #             d_svhn_loss.data[0], d_fake_loss.data[0], g_loss.data[0]))
 
             # save the sampled images
             if (step+1) % self.sample_step == 0:
@@ -208,12 +209,12 @@ class Solver(object):
                 
                 merged = self.merge_images(mnist, fake_svhn)
                 path = os.path.join(self.sample_path, 'sample-%d-m-s.png' %(step+1))
-                scipy.misc.imsave(path, merged)
+                imageio.imwrite(path, merged)
                 print ('saved %s' %path)
                 
                 merged = self.merge_images(svhn, fake_mnist)
                 path = os.path.join(self.sample_path, 'sample-%d-s-m.png' %(step+1))
-                scipy.misc.imsave(path, merged)
+                imageio.imwrite(path, merged)
                 print ('saved %s' %path)
             
             if (step+1) % 5000 == 0:

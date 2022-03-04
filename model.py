@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -42,7 +43,7 @@ class G12(nn.Module):
         out = F.leaky_relu(self.conv4(out), 0.05)    # ( " )
         
         out = F.leaky_relu(self.deconv1(out), 0.05)  # (?, 64, 16, 16)
-        out = F.tanh(self.deconv2(out))              # (?, 3, 32, 32)
+        out = torch.tanh(self.deconv2(out))              # (?, 3, 32, 32)
         return out
     
 class G21(nn.Module):
@@ -69,7 +70,7 @@ class G21(nn.Module):
         out = F.leaky_relu(self.conv4(out), 0.05)    # ( " )
         
         out = F.leaky_relu(self.deconv1(out), 0.05)  # (?, 64, 16, 16)
-        out = F.tanh(self.deconv2(out))              # (?, 1, 32, 32)
+        out = torch.tanh(self.deconv2(out))              # (?, 1, 32, 32)
         return out
     
 class D1(nn.Module):
