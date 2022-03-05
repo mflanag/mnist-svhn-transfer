@@ -212,8 +212,11 @@ class Solver(object):
                 mnist, fake_mnist = self.to_data(fixed_mnist), self.to_data(fake_mnist)
                 svhn , fake_svhn = self.to_data(fixed_svhn), self.to_data(fake_svhn)
                 
+                if not os.path.exists(self.sample_path):
+                    os.makedirs(self.sample_path)
+
                 merged = self.merge_images(mnist, fake_svhn)
-                path = os.path.join(self.sample_path, 'sample-%d-m-s.png' %(step+1))
+                path = os.path.join(self.sample_path, 'sample-%d-m-s.png' %(step+1))              
                 imageio.imwrite(path, merged)
                 print ('saved %s' %path)
                 
@@ -222,12 +225,16 @@ class Solver(object):
                 imageio.imwrite(path, merged)
                 print ('saved %s' %path)
             
-            if (step+1) % 5000 == 0:
+            if (step+1) % 2000 == 0:
                 # save the model parameters for each epoch
                 g12_path = os.path.join(self.model_path, 'g12-%d.pkl' %(step+1))
                 g21_path = os.path.join(self.model_path, 'g21-%d.pkl' %(step+1))
                 d1_path = os.path.join(self.model_path, 'd1-%d.pkl' %(step+1))
                 d2_path = os.path.join(self.model_path, 'd2-%d.pkl' %(step+1))
+
+                if not os.path.exists(self.model_path):
+                    os.makedirs(self.model_path)
+                
                 torch.save(self.g12.state_dict(), g12_path)
                 torch.save(self.g21.state_dict(), g21_path)
                 torch.save(self.d1.state_dict(), d1_path)

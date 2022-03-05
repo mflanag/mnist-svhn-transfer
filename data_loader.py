@@ -6,11 +6,11 @@ def get_loader(config):
     """Builds and returns Dataloader for MNIST and SVHN dataset."""
     
     transform_svhn = transforms.Compose([
-                    transforms.Scale(config.image_size),
+                    transforms.Resize(config.image_size),
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     transform_mnist = transforms.Compose([
-                    transforms.Scale(config.image_size),
+                    transforms.Resize(config.image_size),
                     transforms.ToTensor(),
                     transforms.Normalize(.5, .5)])
     svhn = datasets.SVHN(root=config.svhn_path, download=True, transform=transform_svhn)
